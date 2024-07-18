@@ -441,6 +441,23 @@ curl -X POST http://localhost:8080/api/b2c/request \
     }'
 ```
 
+```sh
+curl -X POST http://localhost:8080/api/b2c/request \
+    -H "Content-Type: application/json" \
+    -d '{
+        "amount": 1000,
+        "partyA": "1234567890",
+        "partyB": "072902414612",            
+        "originatorConversationID": "SGH&Y9NGBT",
+        "initiatorName": "initiator",
+        "securityCredential": "security",
+        "commandID": "command",
+        "remarks": "Payment for services",
+        "queueTimeoutURL": "http://example.com/timeout",
+        "resultURL": "http://example.com/result"
+    }'
+```
+    
 ### 2. GET /api/b2c/status/{id} - Get the status of a B2C request
 
 **Path Parameter:**
