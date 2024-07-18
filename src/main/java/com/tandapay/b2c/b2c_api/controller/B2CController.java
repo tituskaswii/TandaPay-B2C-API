@@ -1,4 +1,4 @@
-package com.tandapay.b2c.b2c_api.controller.model;
+package com.tandapay.b2c.b2c_api.controller;
 
 import com.tandapay.b2c.b2c_api.model.B2CRequest;
 import com.tandapay.b2c.b2c_api.service.B2CService;
