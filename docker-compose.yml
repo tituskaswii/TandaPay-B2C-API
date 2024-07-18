@@ -7,7 +7,7 @@ services:
     ports:
       - 27017:27017
     networks:
-      - b2c-network
+      - tanda-network
 
   kafka:
     image: wurstmeister/kafka:2.13-2.7.0
@@ -17,8 +17,11 @@ services:
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_BROKER_ID: 1
     networks:
-      - b2c-network
+      - tanda-network
 
   zookeeper:
     image: wurstmeister/zookeeper:3.4.6
@@ -26,13 +29,14 @@ services:
     ports:
       - 2181:2181
     networks:
-      - b2c-network
+      - tanda-network
 
   b2c-api:
     image: b2c-api
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: tanda-b2c-api
     ports:
       - 8080:8080
     depends_on:
@@ -40,8 +44,11 @@ services:
       - kafka
       - zookeeper
     networks:
-      - b2c-network
+      - tanda-network
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/b2c-api
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
 networks:
-  b2c-network:
+  tanda-network:
     driver: bridge
