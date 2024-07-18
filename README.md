@@ -10,7 +10,7 @@ This project implements handlers for the Daraja B2C API using Java Spring Boot, 
 
 ## Requirements
 
-- Java 11 or later
+- Java 17 or later
 - Docker
 - Docker Compose
 
