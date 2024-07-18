@@ -247,7 +247,7 @@ This architecture ensures a robust, scalable, and efficient way to handle B2C tr
 
 
 *****************************************************************************************************************************************
-************************************************** Application's Data Flow Guide ********************************************************
+********************************* Application's Data Flow Guide ********************************
 
 To understand the complete data flow and how the components interact within the application, particularly regarding the HTTP request to the M-Pesa Daraja URL for making new requests, let's break down the flow step by step:
 
