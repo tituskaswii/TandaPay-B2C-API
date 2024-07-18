@@ -10,7 +10,7 @@ This project implements handlers for the Daraja B2C API using Java Spring Boot, 
 
 ## Requirements
 
-- Java 11 or later
+- Java 17 or later
 - Docker
 - Docker Compose
 
@@ -407,3 +407,120 @@ User (Client)
 
 This diagram and explanation illustrate the flow of data from the user to the M-Pesa Daraja API and back, highlighting how the various components in the application interact to process B2C payment requests.
 
+
+
+
+#################################################################################################################
+########################################### **Testing the Application** #############################################
+#################################################################################################################
+To test the Tanda-B2C-API application's endpoints, we can use a tool like `**curl**` for command-line testing or **Postman** for a graphical interface. Below are examples of how you can test each endpoint with realistic parameters and statuses using `curl`.
+
+### 1. POST /api/b2c/request - Create a B2C request
+
+**Request Body Example:**
+
+```json
+{
+    "amount": 1000,
+    "recipient": "recipient-phone-number",
+    "accountReference": "reference",
+    "transactionDesc": "Payment for services"
+}
+```
+
+**Curl Command:**
+
+```sh
+curl -X POST http://localhost:8080/api/b2c/request \
+    -H "Content-Type: application/json" \
+    -d '{
+        "amount": 1000,
+        "recipient": "0729024146",
+        "accountReference": "SGH7Y9NGBT",
+        "transactionDesc": "Payment for services"
+    }'
+```
+
+```sh
+curl -X POST http://localhost:8080/api/b2c/request \
+    -H "Content-Type: application/json" \
+    -d '{
+        "amount": 1000,
+        "partyA": "1234567890",
+        "partyB": "072902414612",            
+        "originatorConversationID": "SGH&Y9NGBT",
+        "initiatorName": "initiator",
+        "securityCredential": "security",
+        "commandID": "command",
+        "remarks": "Payment for services",
+        "queueTimeoutURL": "http://example.com/timeout",
+        "resultURL": "http://example.com/result"
+    }'
+```
+    
+### 2. GET /api/b2c/status/{id} - Get the status of a B2C request
+
+**Path Parameter:**
+
+- `id` - The ID of the B2C request (e.g., `12345`)
+
+**Curl Command:**
+
+```sh
+curl -X GET http://localhost:8080/api/b2c/status/12345
+```
+
+### 3. PUT /api/b2c/status/{id} - Update the status of a B2C request
+
+**Path Parameter:**
+
+- `id` - The ID of the B2C request (e.g., `12345`)
+
+**Request Body Example:**
+
+```json
+{
+    "status": "COMPLETED"
+}
+```
+
+**Curl Command:**
+
+```sh
+curl -X PUT http://localhost:8080/api/b2c/status/12345 \
+    -H "Content-Type: application/json" \
+    -d '{
+        "status": "COMPLETED"
+    }'
+```
+
+### Additional Tips:
+
+- Ensure the Spring Boot application is running in a detached mode (docker-compose up --build -d) and the port mappings are correct.
+- Replace `localhost:8080` with the appropriate host and port if the application is running on a different host or port.
+- Use realistic values for `amount`, `recipient`, `accountReference`, and `transactionDesc` based on the application's business logic and requirements.
+- For the `GET` and `PUT` requests, replace `12345` with the actual ID or reference code of a B2C request you have created.
+
+### Testing with Postman:
+
+1. **POST /api/b2c/request**:
+    - Open Postman.
+    - Create a new POST request.
+    - Set the URL to `http://localhost:8080/api/b2c/request`.
+    - Set the Headers to include `Content-Type: application/json`.
+    - Set the Body to raw JSON and paste the JSON example provided above.
+    - Send the request and check the response.
+
+2. **GET /api/b2c/status/{id}**:
+    - Create a new GET request.
+    - Set the URL to `http://localhost:8080/api/b2c/status/12345` (replace `12345` with a valid ID).
+    - Send the request and check the response.
+
+3. **PUT /api/b2c/status/{id}**:
+    - Create a new PUT request.
+    - Set the URL to `http://localhost:8080/api/b2c/status/12345` (replace `12345` with a valid ID).
+    - Set the Headers to include `Content-Type: application/json`.
+    - Set the Body to raw JSON and paste the JSON example provided above.
+    - Send the request and check the response.
+
+These examples should help you test the endpoints of the Tanda B2C API application effectively.
