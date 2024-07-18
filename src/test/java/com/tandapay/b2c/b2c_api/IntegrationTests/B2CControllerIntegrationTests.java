@@ -77,8 +77,8 @@ public class B2CControllerIntegrationTests {
         b2cRequestRepository.save(request);
 
         mockMvc.perform(put("/api/b2c/status/1")
-                .contentType(MediaType.TEXT_PLAIN)
-                .content("Completed"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("Completed"));
     }
