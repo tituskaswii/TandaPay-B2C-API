@@ -1,4 +1,5 @@
 # Here's the complete content for the `README.md` file:
+NB: The application is well tested and running with Docker containers (including:- Tanda-B2C-API-APP, Kafka, MongoDB, etc)
 
 markdown
 
@@ -20,10 +21,231 @@ This project implements handlers for the Daraja B2C API using Java Spring Boot, 
 
 ```bash
 ./mvnw clean package
+./mvnw clean install
 Run
 ```bash
-
+docker-compose up --build -d # to run the container in a detached mode.
+or
 docker-compose up --build
+
+################################## Building & Interactign with the specified containers #################################
+#########################################################################################################################
+
+1. tanda-b2c-api
+Build the Docker Image (assuming you have a Dockerfile in the project):
+
+   sh
+      docker build -t b2c-api .
+      Run the tanda-b2c-api Container:
+
+   sh
+      docker run -d --name tanda-b2c-api -p 8080:8080 --link kafka:kafka --link mongodb:mongodb b2c-api
+
+2. Kafka
+
+Start Zookeeper:
+
+   sh
+      docker run -d --name zookeeper -p 2181:2181 wurstmeister/zookeeper:3.4.6
+
+Start Kafka:
+
+   sh
+      docker run -d --name kafka -p 9092:9092 --link zookeeper:zookeeper -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092 -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 wurstmeister/kafka:2.13-2.7.0
+
+3. MongoDB
+   Start MongoDB:
+   sh
+      docker run -d --name mongodb -p 27017:27017 mongo:4.2
+
+#########################################################################################################################
+
+#################################### Building & Running the App with Docker Compose #####################################
+#########################################################################################################################
+
+Ensure there is docker-compose.yml file in the root directory of the project.
+
+Start all services:
+
+sh
+   docker-compose up -d
+
+Stop all services:
+
+sh
+   docker-compose down
+
+Verifying the Setup
+#After starting the services with Docker Compose, you can verify that everything is working correctly by checking the logs:
+
+Check Zookeeper logs:
+
+sh #Check zookeeper logs for errors and warnings in zookeeper logs for example docker container logs using shell commands
+   docker logs zookeeper
+
+Check Kafka logs:
+
+sh #Check Kafka logs for errors and warnings in Kafka logs for example docker container logs
+   docker logs kafka
+
+Check MongoDB logs:
+
+sh #Check MongoDB logs for errors and warnings in MongoDB logs for example docker
+   docker logs mongodb
+
+Check tanda-b2c-api logs:
+
+sh #Check tanda-b2c-api logs for errors and warnings in  tanda-b2c logs for example docker
+   docker logs tanda-b2c-api
+
+#########################################################################################################################
+
+#################################### Exec into the Running Docker Containers in our B2C Service #####################################
+#########################################################################################################################
+
+Here are the commands to exec into the containers and carry out some operations:
+
+### Exec into Containers
+
+1. **Exec into Zookeeper Container**:
+    ```sh
+    docker exec -it zookeeper /bin/bash
+    ```
+
+2. **Exec into Kafka Container**:
+    ```sh
+    docker exec -it kafka /bin/bash
+    ```
+
+3. **Exec into MongoDB Container**:
+    ```sh
+    docker exec -it mongodb /bin/bash
+    ```
+
+4. **Exec into tanda-b2c-api Container**:
+    ```sh
+    docker exec -it tanda-b2c-api /bin/bash
+    ```
+
+### Carry Out Operations
+
+#### Zookeeper
+
+Zookeeper typically doesn't require direct interaction for this setup, but you can use the `zkCli.sh` to interact with it:
+
+```sh
+docker exec -it zookeeper /bin/bash
+./bin/zkCli.sh
+```
+
+#### Kafka
+
+1. **List Kafka Topics**:
+    ```sh
+    docker exec -it kafka /bin/bash
+    /opt/kafka/bin/kafka-topics.sh --list --zookeeper zookeeper:2181
+    ```
+
+2. **Create a Kafka Topic**:
+    ```sh
+    docker exec -it kafka /bin/bash
+    /opt/kafka/bin/kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 1 --topic b2c-request
+    ```
+
+3. **Describe a Kafka Topic**:
+    ```sh
+    docker exec -it kafka /bin/bash
+    /opt/kafka/bin/kafka-topics.sh --describe --zookeeper zookeeper:2181 --topic b2c-request
+    ```
+
+4. **Produce Messages to a Kafka Topic**:
+    ```sh
+    docker exec -it kafka /bin/bash
+    /opt/kafka/bin/kafka-console-producer.sh --broker-list kafka:9092 --topic b2c-request
+    ```
+
+5. **Consume Messages from a Kafka Topic**:
+    ```sh
+    docker exec -it kafka /bin/bash
+    /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic b2c-request --from-beginning
+    ```
+
+#### MongoDB
+
+1. **MongoDB Shell**:
+    ```sh
+    docker exec -it mongodb mongo
+    ```
+
+2. **Show Databases**:
+    ```sh
+    docker exec -it mongodb mongo --eval "show dbs"
+    ```
+
+3. **Use Database**:
+    ```sh
+    docker exec -it mongodb mongo --eval "use b2c-api"
+    ```
+
+4. **Show Collections**:
+    ```sh
+    docker exec -it mongodb mongo --eval "use b2c-api; show collections"
+    ```
+
+5. **Find Documents in a Collection**:
+    ```sh
+    docker exec -it mongodb mongo --eval "use b2c-api; db.b2c_requests.find().pretty()"
+    ```
+
+#### tanda-b2c-api
+
+You typically don't need to exec into the `tanda-b2c-api` container for regular operations, but you can do so for debugging or log checks:
+
+1. **Check Application Logs**:
+    ```sh
+    docker logs tanda-b2c-api
+    ```
+
+2. **Exec into tanda-b2c-api for Debugging**:
+    ```sh
+    docker exec -it tanda-b2c-api /bin/bash
+    ```
+
+### Example Operations
+
+1. **Create a B2C Request**:
+    ```sh
+    curl -X POST http://localhost:8080/api/b2c/request \
+        -H "Content-Type: application/json" \
+        -d '{
+            "amount": 1000,
+            "originatorConversationID": "SGH&Y9NGBT",
+            "initiatorName": "initiator",
+            "securityCredential": "security",
+            "commandID": "command",
+            "partyA": "1234567890",
+            "partyB": "0729024146",
+            "remarks": "Payment for services",
+            "queueTimeoutURL": "http://example.com/timeout",
+            "resultURL": "http://example.com/result"
+        }'
+    ```
+
+2. **Fetch Request Status**:
+    ```sh
+    curl -X GET http://localhost:8080/api/b2c/status/{id}
+    ```
+
+3. **Update Request Status**:
+    ```sh
+    curl -X PUT http://localhost:8080/api/b2c/status/{id} \
+        -H "Content-Type: application/json" \
+        -d '{"status": "Completed"}'
+    ```
+
+These commands will help you set up, run, and interact with the application and its components using Docker and Docker Compose.
+
+#########################################################################################################################
 
 *Tests*
 
@@ -50,7 +272,7 @@ Configuration settings are located in src/main/resources/application.properties.
 spring.data.mongodb.uri=mongodb://localhost:27017/b2c_db
 
 # Kafka Configuration
-spring.kafka.bootstrap-servers=localhost:9092
+spring.kafka.bootstrap-servers=kafka:9092
 spring.kafka.consumer.group-id=b2c-consumer-group
 spring.kafka.consumer.auto-offset-reset=earliest
 spring.kafka.consumer.enable-auto-commit=false
@@ -411,53 +633,35 @@ This diagram and explanation illustrate the flow of data from the user to the M-
 
 
 #################################################################################################################
-########################################### **Testing the Application** #############################################
+########################################### **Testing the Application** #########################################
 #################################################################################################################
+
 To test the Tanda-B2C-API application's endpoints, we can use a tool like `**curl**` for command-line testing or **Postman** for a graphical interface. Below are examples of how you can test each endpoint with realistic parameters and statuses using `curl`.
 
 ### 1. POST /api/b2c/request - Create a B2C request
 
 **Request Body Example:**
 
-```json
-{
-    "amount": 1000,
-    "recipient": "recipient-phone-number",
-    "accountReference": "reference",
-    "transactionDesc": "Payment for services"
-}
-```
-
 **Curl Command:**
 
 ```sh
-curl -X POST http://localhost:8080/api/b2c/request \
-    -H "Content-Type: application/json" \
-    -d '{
-        "amount": 1000,
-        "recipient": "0729024146",
-        "accountReference": "SGH7Y9NGBT",
-        "transactionDesc": "Payment for services"
-    }'
+   curl -X POST http://localhost:8080/api/b2c/request \
+      -H "Content-Type: application/json" \
+      -d '{
+         "amount": 1000,
+         "originatorConversationID": "SGH&Y9NGBT",
+         "initiatorName": "initiator",
+         "securityCredential": "security",
+         "commandID": "command",
+         "partyA": "1234567890",
+         "partyB": "0729024146",
+         "remarks": "Payment for services",
+         "queueTimeoutURL": "http://example.com/timeout",
+         "resultURL": "http://example.com/result"
+      }'
+
 ```
 
-```sh
-curl -X POST http://localhost:8080/api/b2c/request \
-    -H "Content-Type: application/json" \
-    -d '{
-        "amount": 1000,
-        "partyA": "1234567890",
-        "partyB": "072902414612",            
-        "originatorConversationID": "SGH&Y9NGBT",
-        "initiatorName": "initiator",
-        "securityCredential": "security",
-        "commandID": "command",
-        "remarks": "Payment for services",
-        "queueTimeoutURL": "http://example.com/timeout",
-        "resultURL": "http://example.com/result"
-    }'
-```
-    
 ### 2. GET /api/b2c/status/{id} - Get the status of a B2C request
 
 **Path Parameter:**
@@ -479,9 +683,9 @@ curl -X GET http://localhost:8080/api/b2c/status/12345
 **Request Body Example:**
 
 ```json
-{
-    "status": "COMPLETED"
-}
+   curl -X PUT http://localhost:8080/api/b2c/status/{id} \
+      -H "Content-Type: application/json" \
+      -d '{"status": "Completed"}'
 ```
 
 **Curl Command:**
@@ -524,3 +728,83 @@ curl -X PUT http://localhost:8080/api/b2c/status/12345 \
     - Send the request and check the response.
 
 These examples should help you test the endpoints of the Tanda B2C API application effectively.
+
+
+#################################################################################################################
+############################### **Data Flow with Kafka Producer & Consumer** ####################################
+#################################################################################################################
+
+#### Kafka Producer #####
+
+### KafkaProducer Overview
+
+1. **Sending B2C Requests**:
+    - The `KafkaProducer` is responsible for sending B2C requests to the Kafka topic `b2c-request`.
+    - It receives the B2C request from the `B2CService` after validating and saving it to the MongoDB database.
+
+### Detailed Explanation of the KafkaProducer Data Flow
+
+### Data Flow with KafkaProducer
+
+1. **Receive B2C Request**:
+    - A B2C request is received via the `B2CController`.
+    - The request is passed to the `B2CService` for processing.
+
+2. **Process B2C Request**:
+    - The `B2CService` validates the request (e.g., checks for valid mobile number and amount).
+    - The request details, including the status as "Pending", are saved to the MongoDB database.
+    - The `B2CService` then invokes the `KafkaProducer` to send the request to Kafka.
+
+3. **Send B2C Request to Kafka**:
+    - The `KafkaProducer` takes the validated and saved B2C request and sends it to the `b2c-request` Kafka topic.
+    - The `KafkaProducer` uses the configured Kafka template to send the message to the appropriate Kafka topic.
+
+4. **Kafka Broker**:
+    - The Kafka broker receives the B2C request message on the `b2c-request` topic.
+    - This message can then be consumed by any service subscribed to this topic for further processing (e.g., initiating the payment transaction).
+
+### Summary
+
+The `KafkaProducer` plays a key role in the data flow of the application by ensuring that validated B2C requests are sent to Kafka for further processing. This setup allows the application to handle asynchronous communication and processing of B2C transactions, leveraging Kafka for reliable messaging and MongoDB for persistent storage.
+
+
+##### Kafka Consumer #####
+
+The `KafkaConsumer` in the application is responsible for listening to a Kafka topic for responses related to B2C requests and processing these responses. Here's an overview of what the `KafkaConsumer` does in the context of the application's data flow:
+
+### KafkaConsumer Overview
+
+1. **Listening for Responses**:
+    - The `KafkaConsumer` is configured to listen to the `b2c-response` Kafka topic.
+    - When a message (B2C response) is published to this topic, the `KafkaConsumer` receives it.
+
+2. **Processing Responses**:
+    - Upon receiving a message, the consumer logs the received response for debugging and monitoring purposes.
+    - It then retrieves the corresponding B2C request from the MongoDB database using the `requestId` from the response.
+
+3. **Updating Request Status**:
+    - If the corresponding B2C request is found in the database, the consumer updates the status of this request with the status from the response.
+    - If the request is not found, it logs an error indicating that the request ID does not exist in the database.
+
+### Data Flow with KafkaConsumer
+
+1. **Receive B2C Request**:
+    - A B2C request is created and processed by `B2CService`.
+    - The request is validated and saved to the MongoDB database with a status of "Pending".
+    - The `KafkaProducer` sends this request to the `b2c-request` Kafka topic.
+
+2. **Process B2C Request**:
+    - A separate service (not shown in the current code) listens to the `b2c-request` Kafka topic, processes the payment, and sends a response to the `b2c-response` Kafka topic.
+
+3. **Listen for B2C Response**:
+    - The `KafkaConsumer` listens to the `b2c-response` Kafka topic for responses.
+    - When a response is received, the consumer logs the response and processes it.
+
+4. **Update Request Status**:
+    - The consumer looks up the original B2C request in the MongoDB database using the `requestId` from the response.
+    - If the request is found, it updates the request status with the status provided in the response.
+    - The updated request is saved back to the MongoDB database.
+    - If the request is not found, an error is logged.
+
+### Summary
+The `KafkaConsumer` plays a crucial role in the application's data flow by ensuring that the status of B2C requests is updated based on the responses received from the Kafka topic. This setup ensures that the application can handle asynchronous communication and processing of B2C transactions efficiently, leveraging Kafka for messaging and MongoDB for persistent storage.
