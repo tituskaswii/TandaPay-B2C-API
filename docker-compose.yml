@@ -1,11 +1,11 @@
-version: '3.7'
+version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:4.2
-    container_name: mongodb
+  zookeeper:
+    image: wurstmeister/zookeeper:3.4.6
+    container_name: zookeeper
     ports:
-      - 27017:27017
+      - 2181:2181
     networks:
       - tanda-network
 
@@ -20,14 +20,17 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
     networks:
       - tanda-network
 
-  zookeeper:
-    image: wurstmeister/zookeeper:3.4.6
-    container_name: zookeeper
+  mongodb:
+    image: mongo:4.2
+    container_name: mongodb
     ports:
-      - 2181:2181
+      - 27017:27017
     networks:
       - tanda-network
 
@@ -42,7 +45,6 @@ services:
     depends_on:
       - mongodb
       - kafka
-      - zookeeper
     networks:
       - tanda-network
     environment:
